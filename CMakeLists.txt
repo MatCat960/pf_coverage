@@ -28,7 +28,7 @@ find_package(turtlebot3_msgs REQUIRED)
 find_package(particle_filter REQUIRED)
 find_package(GaussianMixtureModel REQUIRED)
 find_package(visualization_msgs REQUIRED)
-find_package(SFML REQUIRED COMPONENTS graphics window system)
+# find_package(SFML REQUIRED COMPONENTS graphics window system)
 
 ################################################################################
 # Build
@@ -62,30 +62,13 @@ set(SFML_libraries
   "sfml-system"
 )
 
-target_link_libraries(${PROJECT_NAME}_lib)
-ament_target_dependencies(${PROJECT_NAME}_lib ${dependencies})
-
-add_executable(pf_coverage src/pf_coverage.cpp )
-target_link_libraries(pf_coverage ${SFML_libraries})
-ament_target_dependencies(pf_coverage ${dependencies})
-
-add_executable(vision_emulator src/vision_emulator.cpp )
-ament_target_dependencies(vision_emulator ${dependencies})
-
-add_executable(coverage_distributed_neighmaster src/coverage_distributed_neighmaster.cpp )
-target_link_libraries(coverage_distributed_neighmaster ${SFML_libraries})
-ament_target_dependencies(coverage_distributed_neighmaster ${dependencies})
-
-add_executable(coverage_distributed_singlenode src/coverage_distributed_singlenode.cpp )
-target_link_libraries(coverage_distributed_singlenode ${SFML_libraries})
-ament_target_dependencies(coverage_distributed_singlenode ${dependencies})
 
 add_executable(turtlebot_supervisor src/turtlebot_supervisor.cpp )
 # target_link_libraries(turtlebot_supervisor ${SFML_libraries})
 ament_target_dependencies(turtlebot_supervisor ${dependencies})
 
 add_executable(turtlepf_coverage src/turtlepf_coverage.cpp )
-target_link_libraries(turtlepf_coverage ${SFML_libraries})
+# target_link_libraries(turtlepf_coverage ${SFML_libraries})
 ament_target_dependencies(turtlepf_coverage ${dependencies})
 
 
@@ -95,10 +78,6 @@ ament_target_dependencies(turtlepf_coverage ${dependencies})
 ################################################################################
 
 install(TARGETS
-  pf_coverage
-  vision_emulator
-  coverage_distributed_neighmaster
-  coverage_distributed_singlenode
   turtlebot_supervisor
   turtlepf_coverage
   DESTINATION lib/${PROJECT_NAME}

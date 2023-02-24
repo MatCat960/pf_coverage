@@ -31,7 +31,7 @@
 #include "pf_coverage/FortuneAlgorithm.h"
 #include "pf_coverage/Voronoi.h"
 #include "pf_coverage/Diagram.h"
-#include "pf_coverage/Graphics.h"
+// #include "pf_coverage/Graphics.h"
 // ROS includes
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -106,7 +106,7 @@ public:
         this->get_parameter("MODE", MODE);
 
         //Range di percezione singolo robot (= metà lato box locale)
-        this->declare_parameter<double>("ROBOT_RANGE", 3.0);
+        this->declare_parameter<double>("ROBOT_RANGE", 4.0);
         this->get_parameter("ROBOT_RANGE", ROBOT_RANGE);
         this->declare_parameter<double>("ROBOT_FOV", 120.0);
         this->get_parameter("ROBOT_FOV", ROBOT_FOV);
@@ -116,7 +116,7 @@ public:
         // this->get_parameter("PARTICLES_NUM", PARTICLES_NUM);
         
         //view graphical voronoi rapresentation - bool
-        this->declare_parameter<bool>("GRAPHICS_ON", true);
+        this->declare_parameter<bool>("GRAPHICS_ON", false);
         this->get_parameter("GRAPHICS_ON", GRAPHICS_ON);
 
         // Area parameter
@@ -151,13 +151,7 @@ public:
     gmmSub_ = this->create_subscription<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Controller::gmm_callback, this, _1));
     velPub_.push_back(this->create_publisher<geometry_msgs::msg::Twist>("/turtle" + std::to_string(ROBOT_ID) + "/cmd_vel", 1));
     // voronoiPub = this->create_publisher<geometry_msgs::msg::PolygonStamped>("/voronoi"+std::to_string(ID)+"_diagram", 1);
-    if (MODE == 0)
-    {
-        timer_ = this->create_wall_timer(250ms, std::bind(&Controller::pf_coverage, this));
-    } else if (MODE == 1)
-    {
-        timer_ = this->create_wall_timer(500ms, std::bind(&Controller::pf_milling, this));
-    }
+    timer_ = this->create_wall_timer(250ms, std::bind(&Controller::pf_coverage, this));
     
     //rclcpp::on_shutdown(std::bind(&Controller::stop,this));
 
@@ -201,10 +195,10 @@ public:
     //------------------------------------------------------------------------------------------------------------------------------------
     
     // ----------------------------------------------- Graphics window -------------------------------------------------
-    if (GRAPHICS_ON)
-    {
-        app_gui.reset(new Graphics{AREA_SIZE_x, AREA_SIZE_y, AREA_LEFT, AREA_BOTTOM, 2.0});
-    }
+    // if (GRAPHICS_ON)
+    // {
+    //     app_gui.reset(new Graphics{AREA_SIZE_x, AREA_SIZE_y, AREA_LEFT, AREA_BOTTOM, 2.0});
+    // }
 
     if(SAVE_POS)
         {
@@ -215,7 +209,6 @@ public:
     }
     ~Controller()
     {
-        if ((GRAPHICS_ON) && (this->app_gui->isOpen())){this->app_gui->close();}
         if(SAVE_POS)
         {
             close_log_file();
@@ -236,7 +229,6 @@ public:
     Eigen::VectorXd Matrix_row_sum(Eigen::MatrixXd x);
     Eigen::MatrixXd Diag_Matrix(Eigen::VectorXd V);
     void pf_coverage();
-    void pf_milling();
     void coverage();
     bool insideFOV(Eigen::VectorXd q, Eigen::VectorXd q_obs, double fov, double r_sens);
     Eigen::VectorXd predictVelocity(Eigen::VectorXd q, Eigen::VectorXd mean_pt);
@@ -311,7 +303,7 @@ private:
 
     //Rendering with SFML
     //------------------------------ graphics window -------------------------------------
-    std::unique_ptr<Graphics> app_gui;
+    // std::unique_ptr<Graphics> app_gui;
     //------------------------------------------------------------------------------------
 
     //---------------------------- Environment definition --------------------------------
@@ -645,136 +637,133 @@ void Controller::pf_coverage()
 
 
 
-    if ((GRAPHICS_ON) && (this->app_gui->isOpen()))
+    // this->app_gui->clear();
+    // this->app_gui->drawGlobalReference(sf::Color(255,255,0), sf::Color(255,255,255));
+    // this->app_gui->drawFOV(robot, ROBOT_FOV, ROBOT_RANGE);
+    // this->app_gui->drawPoint(GAUSSIAN_MEAN_PT, sf::Color(255,128,0));
+    // Vector2<double> goal = {GOAL_X, GOAL_Y};
+    // this->app_gui->drawPoint(goal, sf::Color(255,128,0));
+    // for (int i = 0; i < ROBOTS_NUM; i++)
+    // {
+    //     auto color = sf::Color(0,255,0);                        // default color for other robots: green
+    //     if (i == ROBOT_ID) {color = sf::Color(255,0,0);}        // controlled robot color: red
+    //     Vector2<double> n;
+    //     n.x = this->realpose_x(i);
+    //     n.y = this->realpose_y(i);
+    //     this->app_gui->drawPoint(n, color);
+        
+    // }
+
+    // this->app_gui->drawPoint(me);
+    // for (int j = 0; j < ROBOTS_NUM; j++)
+    // {
+    //     if (j > ROBOT_ID)
+    //     {
+    //         this->app_gui->drawParticles(filters[j-1]->getParticles());
+    //     }
+    //     else if (j < ROBOT_ID)
+    //     {
+    //         this->app_gui->drawParticles(filters[j]->getParticles());
+    //     }
+    // }
+
+    // Draw Voronoi diagram (centralized)
+    std::vector<Vector2<double>> mean_points_vec2;
+    Vector2<double> n = {this->pose_x(ROBOT_ID), this->pose_y(ROBOT_ID)};
+    mean_points_vec2.push_back(n);
+    for (int j = 0; j < mean_points.size(); j++)
     {
-        this->app_gui->clear();
-        this->app_gui->drawGlobalReference(sf::Color(255,255,0), sf::Color(255,255,255));
-        this->app_gui->drawFOV(robot, ROBOT_FOV, ROBOT_RANGE);
-        this->app_gui->drawPoint(GAUSSIAN_MEAN_PT, sf::Color(255,128,0));
-        // Vector2<double> goal = {GOAL_X, GOAL_Y};
-        // this->app_gui->drawPoint(goal, sf::Color(255,128,0));
-        for (int i = 0; i < ROBOTS_NUM; i++)
-        {
-            auto color = sf::Color(0,255,0);                        // default color for other robots: green
-            if (i == ROBOT_ID) {color = sf::Color(255,0,0);}        // controlled robot color: red
-            Vector2<double> n;
-            n.x = this->realpose_x(i);
-            n.y = this->realpose_y(i);
-            this->app_gui->drawPoint(n, color);
-            
-        }
-
-        // this->app_gui->drawPoint(me);
-        for (int j = 0; j < ROBOTS_NUM; j++)
-        {
-            if (j > ROBOT_ID)
-            {
-                this->app_gui->drawParticles(filters[j-1]->getParticles());
-            }
-            else if (j < ROBOT_ID)
-            {
-                this->app_gui->drawParticles(filters[j]->getParticles());
-            }
-        }
-
-        // Draw Voronoi diagram (centralized)
-        std::vector<Vector2<double>> mean_points_vec2;
-        Vector2<double> n = {this->pose_x(ROBOT_ID), this->pose_y(ROBOT_ID)};
-        mean_points_vec2.push_back(n);
-        for (int j = 0; j < mean_points.size(); j++)
-        {
-            Vector2<double> mp = {mean_points[j](0), mean_points[j](1)};
-            mean_points_vec2.push_back(mp);
-        }
-        auto diagram_centr = generateCentralizedDiagram(mean_points_vec2, AreaBox);
-        Vector2<double> centroid_global = {centroid.x + p.x, centroid.y + p.y};
-        this->app_gui->drawDiagram(diagram_centr);
-        this->app_gui->drawPoint(centroid_global, sf::Color(0,255,255));
-
-        for (int i = 0; i < mean_points.size(); i++)
-        {
-            this->app_gui->drawPoint(mean_points[i], sf::Color(0,0,255));
-
-            if (this->got_gmm[i])
-            {
-                Eigen::MatrixXd cov_matrix = mix_models[i]->getClusters()[0].distribution->getCovariance();
-                if(!isinf(cov_matrix(0,0)))
-                {
-                    Eigen::EigenSolver<Eigen::MatrixXd> es(cov_matrix.block<2,2>(0,0));
-                    Eigen::VectorXd eigenvalues  = es.eigenvalues().real();
-                    // std::cout << "Eigenvalues: \n" << eigenvalues.transpose() << "\n";
-                    Eigen::MatrixXd eigenvectors = es.eigenvectors().real();
-                    // std::cout << "Eigenvectors: \n" << eigenvectors.transpose() << "\n";
-                    
-                    // s = 4.605 for 90% confidence interval
-                    // s = 5.991 for 95% confidence interval
-                    // s = 9.210 for 99% confidence interval
-                    double s = 5.991;
-                    double a = sqrt(s*eigenvalues(0));            // major axis
-                    double b = sqrt(s*eigenvalues(1));            // minor axis
-
-                    // a could be smaller than b, so swap them
-                    if (a < b)
-                    {
-                        double temp = a;
-                        a = b;
-                        b = temp;
-                    }
-
-                    int m = 0;                  // higher eigenvalue index
-                    int l = 1;                  // lower eigenvalue index
-                    if (eigenvalues(1) > eigenvalues(0)) 
-                    {
-                        m = 1;
-                        l = 0;
-                    }
-                    
-                    double theta = atan2(eigenvectors(1,m), eigenvectors(0,m));             // angle of the major axis wrt positive x-asis (ccw rotation)
-                    if (theta < 0.0) {theta += M_PI;}                                    // angle in [0, 2pi
-                    this->app_gui->drawEllipse(mean_points[i], a, b, theta);
-                    if(SAVE_POS)
-                    {
-                        std::string txt = "\t" + std::to_string(mean_points[i](0)) + " " + std::to_string(mean_points[i](1)) + " " + std::to_string(a) + " " + std::to_string(b) + " " + std::to_string(theta) + "\n";
-                        write_log_file(txt);
-                    }
-
-                    double slope = atan2(-mean_points[i](1) + this->pose_y(ROBOT_ID), -mean_points[i](0) + this->pose_x(ROBOT_ID));
-                    // slope += theta;
-                    // double slope = 0.0;
-                    // double x_n = mean_points[i](0) + a*cos(0.0);
-                    // double y_n = mean_points[i](1) + b*sin(0.0);
-                    double x_n = mean_points[i](0) + a * cos(slope - theta) * cos(theta) - b * sin(slope - theta) * sin(theta);
-                    double y_n = mean_points[i](1) + a * cos(slope - theta) * sin(theta) + b * sin(slope - theta) * cos(theta);
-                    // double x_n = mean_points[i](0) + eigenvectors(0,m) * a * cos(slope) + eigenvectors(0,l) * b * sin(slope);
-                    // double y_n = mean_points[i](1) + eigenvectors(1,m) * a * cos(slope) + eigenvectors(1,l) * b * sin(slope);
-                    Vector2<double> p_near = {x_n, y_n};
-
-                    // std::cout << "Robot position: " << this->pose_x(ROBOT_ID) << ", " << this->pose_y(ROBOT_ID) << "\n";
-                    // std::cout << "Neighbor estimate: " << mean_points[i](0) << ", " << mean_points[i](1) << "\n";
-                    // std::cout << "Ellipse orientation: " << theta << "\n";
-                    // std::cout << "Slope" << slope << "\n";
-                    // std::cout << "Eigenvalues: " << eigenvalues(m) << ", " << eigenvalues(l) << "\n";
-
-                    double dist = sqrt(pow(p_near.x - this->pose_x(ROBOT_ID), 2) + pow(p_near.y - this->pose_y(ROBOT_ID), 2));
-                    std::cout << "Distance: " << dist << "\n";
-
-                    // Check if robot is inside ellipse
-                    double d = sqrt(pow(mean_points[i](0) - this->pose_x(ROBOT_ID), 2) + pow(mean_points[i](1) - this->pose_y(ROBOT_ID), 2));
-                    if (d < a)
-                    {
-                        distances.push_back(0.5*SAFETY_DIST);
-                    } else
-                    {
-                        distances.push_back(dist);
-                    }
-
-                    this->app_gui->drawPoint(p_near, sf::Color(255,0,127));
-                }
-            }
-        }
-    
-        this->app_gui->display();
+        Vector2<double> mp = {mean_points[j](0), mean_points[j](1)};
+        mean_points_vec2.push_back(mp);
     }
+    auto diagram_centr = generateCentralizedDiagram(mean_points_vec2, AreaBox);
+    // Vector2<double> centroid_global = {centroid.x + p.x, centroid.y + p.y};
+    // this->app_gui->drawDiagram(diagram_centr);
+    // this->app_gui->drawPoint(centroid_global, sf::Color(0,255,255));
+
+    for (int i = 0; i < mean_points.size(); i++)
+    {
+        // this->app_gui->drawPoint(mean_points[i], sf::Color(0,0,255));
+
+        if (this->got_gmm[i])
+        {
+            Eigen::MatrixXd cov_matrix = mix_models[i]->getClusters()[0].distribution->getCovariance();
+            if(!isinf(cov_matrix(0,0)))
+            {
+                Eigen::EigenSolver<Eigen::MatrixXd> es(cov_matrix.block<2,2>(0,0));
+                Eigen::VectorXd eigenvalues  = es.eigenvalues().real();
+                // std::cout << "Eigenvalues: \n" << eigenvalues.transpose() << "\n";
+                Eigen::MatrixXd eigenvectors = es.eigenvectors().real();
+                // std::cout << "Eigenvectors: \n" << eigenvectors.transpose() << "\n";
+                
+                // s = 4.605 for 90% confidence interval
+                // s = 5.991 for 95% confidence interval
+                // s = 9.210 for 99% confidence interval
+                double s = 5.991;
+                double a = sqrt(s*eigenvalues(0));            // major axis
+                double b = sqrt(s*eigenvalues(1));            // minor axis
+
+                // a could be smaller than b, so swap them
+                if (a < b)
+                {
+                    double temp = a;
+                    a = b;
+                    b = temp;
+                }
+
+                int m = 0;                  // higher eigenvalue index
+                int l = 1;                  // lower eigenvalue index
+                if (eigenvalues(1) > eigenvalues(0)) 
+                {
+                    m = 1;
+                    l = 0;
+                }
+                
+                double theta = atan2(eigenvectors(1,m), eigenvectors(0,m));             // angle of the major axis wrt positive x-asis (ccw rotation)
+                if (theta < 0.0) {theta += M_PI;}                                    // angle in [0, 2pi
+                // this->app_gui->drawEllipse(mean_points[i], a, b, theta);
+                if(SAVE_POS)
+                {
+                    std::string txt = "\t" + std::to_string(mean_points[i](0)) + " " + std::to_string(mean_points[i](1)) + " " + std::to_string(a) + " " + std::to_string(b) + " " + std::to_string(theta) + "\n";
+                    write_log_file(txt);
+                }
+
+                double slope = atan2(-mean_points[i](1) + this->pose_y(ROBOT_ID), -mean_points[i](0) + this->pose_x(ROBOT_ID));
+                // slope += theta;
+                // double slope = 0.0;
+                // double x_n = mean_points[i](0) + a*cos(0.0);
+                // double y_n = mean_points[i](1) + b*sin(0.0);
+                double x_n = mean_points[i](0) + a * cos(slope - theta) * cos(theta) - b * sin(slope - theta) * sin(theta);
+                double y_n = mean_points[i](1) + a * cos(slope - theta) * sin(theta) + b * sin(slope - theta) * cos(theta);
+                // double x_n = mean_points[i](0) + eigenvectors(0,m) * a * cos(slope) + eigenvectors(0,l) * b * sin(slope);
+                // double y_n = mean_points[i](1) + eigenvectors(1,m) * a * cos(slope) + eigenvectors(1,l) * b * sin(slope);
+                Vector2<double> p_near = {x_n, y_n};
+
+                // std::cout << "Robot position: " << this->pose_x(ROBOT_ID) << ", " << this->pose_y(ROBOT_ID) << "\n";
+                // std::cout << "Neighbor estimate: " << mean_points[i](0) << ", " << mean_points[i](1) << "\n";
+                // std::cout << "Ellipse orientation: " << theta << "\n";
+                // std::cout << "Slope" << slope << "\n";
+                // std::cout << "Eigenvalues: " << eigenvalues(m) << ", " << eigenvalues(l) << "\n";
+
+                double dist = sqrt(pow(p_near.x - this->pose_x(ROBOT_ID), 2) + pow(p_near.y - this->pose_y(ROBOT_ID), 2));
+                std::cout << "Distance: " << dist << "\n";
+
+                // Check if robot is inside ellipse
+                double d = sqrt(pow(mean_points[i](0) - this->pose_x(ROBOT_ID), 2) + pow(mean_points[i](1) - this->pose_y(ROBOT_ID), 2));
+                if (d < a)
+                {
+                    distances.push_back(0.5*SAFETY_DIST);
+                } else
+                {
+                    distances.push_back(dist);
+                }
+
+                // this->app_gui->drawPoint(p_near, sf::Color(255,0,127));
+            }
+        }
+    }
+    
+        // this->app_gui->display();
 
     // Get mean point of predictions and rotate robot to face it
     // double w = 0;
@@ -829,7 +818,7 @@ void Controller::pf_coverage()
     std::cout<<"Computation time cost: -----------------: "<<end - timerstart<<std::endl;
 }
 
-
+/*
 void Controller::pf_milling()
 {
     // std::cout << "Starting" << std::endl;
@@ -1145,6 +1134,8 @@ void Controller::pf_milling()
     auto end = this->get_clock()->now().nanoseconds();
     std::cout<<"Computation time cost: -----------------: "<<end - timerstart<<std::endl;
 }
+
+*/
 
 void Controller::test_print()
 {
