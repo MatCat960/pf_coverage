@@ -34,12 +34,12 @@ find_package(visualization_msgs REQUIRED)
 # Build
 ################################################################################
 
-add_library(${PROJECT_NAME}_lib
-  "src/pf_coverage.cpp"
-  "src/vision_emulator.cpp"
-  "src/coverage_distributed_neighmaster.cpp"
-  "src/coverage_distributed_singlenode.cpp"
-)
+# add_library(${PROJECT_NAME}_lib
+#   "src/pf_coverage.cpp"
+#   "src/vision_emulator.cpp"
+#   "src/coverage_distributed_neighmaster.cpp"
+#   "src/coverage_distributed_singlenode.cpp"
+# )
 
 set(dependencies
   "geometry_msgs"

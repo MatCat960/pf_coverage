@@ -94,7 +94,7 @@ public:
     Controller() : Node("pf_coverage")
     {
         //------------------------------------------------- ROS parameters ---------------------------------------------------------
-        this->declare_parameter<int>("ROBOTS_NUM", 3);
+        this->declare_parameter<int>("ROBOTS_NUM", 4);
         this->get_parameter("ROBOTS_NUM", ROBOTS_NUM);
 
         // ID of the controlled robot
@@ -120,13 +120,13 @@ public:
         this->get_parameter("GRAPHICS_ON", GRAPHICS_ON);
 
         // Area parameter
-        this->declare_parameter<double>("AREA_SIZE_x", 4.0);
+        this->declare_parameter<double>("AREA_SIZE_x", 10.0);
         this->get_parameter("AREA_SIZE_x", AREA_SIZE_x);
-        this->declare_parameter<double>("AREA_SIZE_y", 4.0);
+        this->declare_parameter<double>("AREA_SIZE_y", 10.0);
         this->get_parameter("AREA_SIZE_y", AREA_SIZE_y);
-        this->declare_parameter<double>("AREA_LEFT", -1.0);
+        this->declare_parameter<double>("AREA_LEFT", -5.0);
         this->get_parameter("AREA_LEFT", AREA_LEFT);
-        this->declare_parameter<double>("AREA_BOTTOM", -1.5);
+        this->declare_parameter<double>("AREA_BOTTOM", -5.0);
         this->get_parameter("AREA_BOTTOM", AREA_BOTTOM);
 
         this->declare_parameter<double>("GOAL_X", -5.0);
@@ -151,7 +151,7 @@ public:
     gmmSub_ = this->create_subscription<turtlebot3_msgs::msg::GMM>("/gaussian_mixture_model", 1, std::bind(&Controller::gmm_callback, this, _1));
     velPub_.push_back(this->create_publisher<geometry_msgs::msg::Twist>("/turtle" + std::to_string(ROBOT_ID) + "/cmd_vel", 1));
     // voronoiPub = this->create_publisher<geometry_msgs::msg::PolygonStamped>("/voronoi"+std::to_string(ID)+"_diagram", 1);
-    timer_ = this->create_wall_timer(250ms, std::bind(&Controller::pf_coverage, this));
+    timer_ = this->create_wall_timer(2000ms, std::bind(&Controller::pf_coverage, this));
     
     //rclcpp::on_shutdown(std::bind(&Controller::stop,this));
 
@@ -164,7 +164,7 @@ public:
     realpose_y = Eigen::VectorXd::Zero(ROBOTS_NUM);
     realpose_theta = Eigen::VectorXd::Zero(ROBOTS_NUM);
     GAUSSIAN_MEAN_PT.resize(2);
-    GAUSSIAN_MEAN_PT << 1.5, 0.75;                       // Gaussian mean point
+    GAUSSIAN_MEAN_PT << 5.0, 5.0;                       // Gaussian mean point
     time(&this->timer_init_count);
     time(&this->timer_final_count);
 
@@ -812,7 +812,7 @@ void Controller::pf_coverage()
         vel.angular.z = 0.8;
     }
 
-    this->velPub_[0]->publish(vel);
+    // this->velPub_[0]->publish(vel);
 
     auto end = this->get_clock()->now().nanoseconds();
     std::cout<<"Computation time cost: -----------------: "<<end - timerstart<<std::endl;
