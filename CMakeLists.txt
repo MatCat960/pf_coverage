@@ -112,7 +112,7 @@ find_package(gaussian_mixture_model REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES pf_coverage particle_filter GaussianMixtureModel
+ LIBRARIES pf_coverage particle_filter gaussian_mixture_model
  CATKIN_DEPENDS roscpp geometry_msgs nav_msgs sensor_msgs tf2 tf2_ros visualization_msgs
 #  DEPENDS system_lib
 )
