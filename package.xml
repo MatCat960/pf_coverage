@@ -55,7 +55,7 @@
   <depend>tf2_ros</depend>
   <depend>visualization_msgs</depend>
   <depend>particle_filter</depend>
-  <depend>GaussianMixtureModel</depend>
+  <depend>gaussian_mixture_model</depend>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_export_depend>roscpp</build_export_depend>
