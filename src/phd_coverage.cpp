@@ -48,11 +48,6 @@
 // #include "kalman_filter/kalman_filter.h"
 // #include "kalman_filter/extended_kalman_filter.h"
 #include "particle_filter/particle_filter.h"
-#include <GaussianMixtureModel/GaussianMixtureModel.h>
-#include <GaussianMixtureModel/ExpectationMaximization.h>
-#include <GaussianMixtureModel/TrainSet.h>
-#include <GaussianMixtureModel/GaussianMixtureModelFactory.h>
-
 #include <gaussian_mixture_model/gaussian_mixture_model.h>
 
 
