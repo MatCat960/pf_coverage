@@ -197,7 +197,7 @@ public:
     Eigen::MatrixXd Diag_Matrix(Eigen::VectorXd V);
     void phd_coverage();
     void pf_coverage();
-    void save_distribution(std::vector<gauss::gmm::GaussianMixtureModel*> mix_models);
+    // void save_distribution(std::vector<gauss::gmm::GaussianMixtureModel*> mix_models);
     bool insideFOV(Eigen::VectorXd q, Eigen::VectorXd q_obs, double fov, double r_sens);
     bool is_outlier(Eigen::VectorXd q, Eigen::VectorXd mean, Eigen::MatrixXd cov_matrix, double threshold);
     bool isOut(Eigen::VectorXd sample, Eigen::VectorXd mean, Eigen::MatrixXd cov_matrix);
@@ -763,32 +763,6 @@ geometry_msgs::Twist Controller::Diff_drive_compute_vel(double vel_x, double vel
     return vel_msg;
 }
 
-
-void Controller::save_distribution(std::vector<gauss::gmm::GaussianMixtureModel*> mix_models)
-{
-    std::ofstream myfile;
-    myfile.open ("/home/mattia/distribution"+std::to_string(ROBOT_ID)+".txt");
-    myfile << "Considering Robot number " << ROBOT_ID << " in position " << this->pose_x(ROBOT_ID) << ", " << this->pose_y(ROBOT_ID) << ", " << this->pose_theta(ROBOT_ID) << "\n";
-    for (int j = 0; j < mix_models.size(); j++)
-    {
-        double c = j;
-        if (j > ROBOT_ID) {c = j-1;}
-        if (j == ROBOT_ID) {continue;}
-        if (this->pose_x(j) != 100.0 && this->pose_y(j) != 100.0)
-        {
-            myfile << "Robot number " << j << " detected.\n";
-            myfile << "Position: " << this->pose_x(j) << ", " << this->pose_y(j) << ", " << this->pose_theta(j) << "\n";
-
-        } else
-        {
-            myfile << "Robot number " << j  << " not detected. "<< "\n";
-            myfile << "Mean: " << mix_models[c]->getClusters()[0].distribution->getMean().transpose() << "\n";
-            myfile << "Covariance: \n" << mix_models[c]->getClusters()[0].distribution->getCovariance() << "\n";
-        }
-        
-    }
-    myfile.close();
-}
 
 bool Controller::is_outlier(Eigen::VectorXd q, Eigen::VectorXd mean, Eigen::MatrixXd cov_matrix, double threshold = 1e-3)
 {
